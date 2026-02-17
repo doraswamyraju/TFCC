@@ -1,0 +1,15 @@
+# robots.txt for Fight Club Championship
+# https://fightclubchampionship.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin or private areas (if any)
+# Disallow: /admin/
+# Disallow: /private/
+
+# Sitemap location
+Sitemap: https://fightclubchampionship.com/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1

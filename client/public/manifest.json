@@ -1,0 +1,27 @@
+{
+  "name": "Fight Club Championship - Strongest Man University Championships",
+  "short_name": "FCC Championship",
+  "description": "India's premier university strength championship. Building the next generation of elite athletes through professional strongman competitions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["sports", "education", "fitness"],
+  "lang": "en-IN",
+  "dir": "ltr"
+}
