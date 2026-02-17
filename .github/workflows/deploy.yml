@@ -40,6 +40,8 @@ jobs:
         REMOTE_USER: ${{ secrets.HOST_USER }}
         TARGET: /var/www/tfcc  # Adjust this path if needed
         EXCLUDE: "/node_modules/"
+        ARGS: "-rltgoDzvO --delete"
+        SSH_CMD_ARGS: "-o StrictHostKeyChecking=no"
       with:
           source: "."
           target: "/var/www/tfcc"
