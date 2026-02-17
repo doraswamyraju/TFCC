@@ -11,6 +11,15 @@ const PORT = process.env.PORT || 5003;
 app.use(cors());
 app.use(express.json());
 
+// JSON Parse Error Handler
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('Bad JSON:', err.message);
+        return res.status(400).send({ status: 400, message: 'Invalid JSON payload' });
+    }
+    next();
+});
+
 // Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/tfcc')
     .then(() => console.log('MongoDB Connected'))
