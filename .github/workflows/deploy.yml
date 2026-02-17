@@ -25,24 +25,26 @@ jobs:
     - name: Build Client
       run: |
         cd client
-        npm run build
+        npm run build --emptyOutDir
 
     - name: Install Server Dependencies
       run: |
         cd server
         npm install
 
-    - name: Deploy to VPS
-      uses: appleboy/scp-action@master
+    - name: Setup SSH Key
+      uses: webfactory/ssh-agent@v0.7.0
       with:
-        host: ${{ secrets.HOST_IP }}
-        username: ${{ secrets.HOST_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "./client/dist/*,./server/*,./package.json"
-        target: "/var/www/tfcc"
-        strip_components: 0
-        debug: true
-        insecure: true
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Add Known Hosts
+      run: ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
+
+    - name: Deploy with rsync
+      run: |
+        rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
+        rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./server/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/server/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./package.json ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/
 
     - name: Restart Server
       uses: appleboy/ssh-action@master
@@ -53,4 +55,4 @@ jobs:
         script: |
           cd /var/www/tfcc/server
           npm install --production
-          pm2 reload tfcc-backend || pm2 start index.js --name tfcc-backend
+          pm2 reload tfcc-backend || pm2 start index.js --name tfcc-backend --time
