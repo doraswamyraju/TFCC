@@ -41,6 +41,8 @@ jobs:
         source: "./client/dist/*,./server/*,./package.json"
         target: "/var/www/tfcc"
         strip_components: 0
+        debug: true
+        insecure: true
 
     - name: Restart Server
       uses: appleboy/ssh-action@master
