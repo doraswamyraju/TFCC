@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown, ArrowRight } from 'lucide-react';
 import type { NavItem } from './navConfig';
@@ -83,6 +84,14 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
               Register Now
               <ArrowRight className="h-5 w-5" />
             </motion.a>
+
+            <Link
+              to="/login"
+              onClick={onClose}
+              className="mt-3 px-6 py-3.5 border border-white/20 hover:border-[#d4af37] text-white hover:text-[#d4af37] text-base font-bold rounded-lg transition-all flex items-center justify-center gap-2 uppercase tracking-wide"
+            >
+              Partner Login
+            </Link>
           </div>
         </motion.div>
       )}

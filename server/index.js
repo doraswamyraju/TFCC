@@ -21,6 +21,11 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'TFCC Backend is running' });
 });
 
+// Auth & Gym Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/gym', require('./routes/gym'));
+app.use('/api/user', require('./routes/user'));
+
 // Serve Frontend (Production)
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../client/dist')));
