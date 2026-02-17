@@ -46,7 +46,6 @@ export function Hero() {
             src={logo}
             alt="FCC Logo"
             loading="eager"
-            fetchPriority="high"
             width="1000"
             height="1000"
             className="relative w-[300px] h-[300px] xs:w-[400px] xs:h-[400px] sm:w-[500px] sm:h-[500px] md:w-[700px] md:h-[700px] lg:w-[800px] lg:h-[800px] xl:w-[1000px] xl:h-[1000px] object-contain opacity-[0.08] sm:opacity-[0.1] md:opacity-[0.15] mx-auto"
