@@ -16,7 +16,7 @@ app.use(express.text({ type: 'application/json' }));
 app.use((req, res, next) => {
     if (req.headers['content-type']?.includes('application/json') && typeof req.body === 'string') {
         console.log('--- RAW BODY RECIEVED ---');
-        console.log(`[${req.body}]`); // Brackets to see whitespace
+        console.log(req.body);
         try {
             req.body = JSON.parse(req.body);
             console.log('JSON Parse Successful');
