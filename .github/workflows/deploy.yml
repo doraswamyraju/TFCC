@@ -33,18 +33,14 @@ jobs:
         npm install
 
     - name: Deploy to VPS
-      uses: easingthemes/ssh-deploy@main
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        REMOTE_HOST: ${{ secrets.HOST_IP }}
-        REMOTE_USER: ${{ secrets.HOST_USER }}
-        TARGET: /var/www/tfcc  # Adjust this path if needed
-        EXCLUDE: "/node_modules/"
-        ARGS: "-rltgoDzvO --delete"
-        SSH_CMD_ARGS: "-o StrictHostKeyChecking=no"
+      uses: appleboy/scp-action@master
       with:
-          source: "."
-          target: "/var/www/tfcc"
+        host: ${{ secrets.HOST_IP }}
+        username: ${{ secrets.HOST_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "./client/dist/*,./server/*,./package.json"
+        target: "/var/www/tfcc"
+        strip_components: 0
 
     - name: Restart Server
       uses: appleboy/ssh-action@master
