@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
@@ -9,7 +10,8 @@ const PORT = process.env.PORT || 5003;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // JSON Parse Error Handler
 app.use((err, req, res, next) => {
