@@ -10,7 +10,25 @@ const PORT = process.env.PORT || 5003;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+
+// DEBUG: Log raw body to debug JSON errors
+app.use(express.text({ type: 'application/json' }));
+app.use((req, res, next) => {
+    if (req.headers['content-type']?.includes('application/json') && typeof req.body === 'string') {
+        console.log('--- RAW BODY RECIEVED ---');
+        console.log(`[${req.body}]`); // Brackets to see whitespace
+        try {
+            req.body = JSON.parse(req.body);
+            console.log('JSON Parse Successful');
+        } catch (e) {
+            console.error('JSON Parse Failed:', e.message);
+            return res.status(400).json({ error: 'Invalid JSON', details: e.message, raw: req.body });
+        }
+    }
+    next();
+});
+
+// app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // JSON Parse Error Handler
