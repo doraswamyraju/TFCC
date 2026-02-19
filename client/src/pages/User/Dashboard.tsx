@@ -27,17 +27,27 @@ interface UserData {
 
 const UserDashboard = () => {
     const { logout } = useAuth();
-    const [data, setData] = useState<UserData | null>(null);
+    const [user, setUser] = useState<any>(null);
+    const [gym, setGym] = useState<any>(null);
+    const [dietPlan, setDietPlan] = useState<any>(null);
+    const [workoutPlan, setWorkoutPlan] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'diet' | 'workout'>('overview');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
+                setError(null);
                 const res = await axios.get('/api/user/dashboard');
-                setData(res.data);
-            } catch (err) {
+                setUser(res.data.user);
+                setGym(res.data.gym);
+                setDietPlan(res.data.dietPlan);
+                setWorkoutPlan(res.data.workoutPlan);
+            } catch (err: any) {
                 console.error('Error fetching dashboard data', err);
+                setError(err.response?.data?.msg || 'Logistics link severed: Personal training data unreachable.');
             } finally {
                 setLoading(false);
             }
@@ -53,7 +63,23 @@ const UserDashboard = () => {
         );
     }
 
-    const { user, gym, dietPlan, workoutPlan } = data || {};
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6 text-zinc-800 border border-white/5 border-dashed">
+                    <LogOut size={40} className="text-[#c41e3a]" />
+                </div>
+                <h4 className="font-black uppercase tracking-tight text-zinc-400 mb-3">System Error</h4>
+                <p className="text-sm text-zinc-600 font-bold mt-2 uppercase tracking-widest max-w-xs">{error}</p>
+                <button
+                    onClick={logout}
+                    className="mt-8 px-6 py-3 bg-[#c41e3a] text-white font-bold uppercase tracking-widest rounded-xl shadow-lg hover:bg-[#a01a2e] transition-colors"
+                >
+                    Logout
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white font-sans pb-24">
@@ -203,16 +229,20 @@ const UserDashboard = () => {
                                                     <Clock size={16} className="text-[#ffd700]" />
                                                     <span className="text-[8px] font-bold mt-0.5 uppercase">{meal.time || 'N/A'}</span>
                                                 </div>
-                                                <div>
-                                                    <h5 className="font-black uppercase tracking-tight text-[#ffd700] mb-1">{meal.type || meal.name}</h5>
-                                                    <p className="text-sm text-zinc-400 font-bold">{meal.description || (meal.calories ? `${meal.calories} kcal` : '')}</p>
-                                                    <div className="flex flex-wrap gap-2 mt-3">
-                                                        {(meal.items || meal.foods)?.map((food: string, fIdx: number) => (
-                                                            <span key={fIdx} className="text-[9px] font-black uppercase tracking-widest bg-white/5 py-1 px-2.5 rounded-lg border border-white/5">
-                                                                {food}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h5 className="font-extrabold text-white uppercase tracking-tight text-sm italic group-hover:text-red-500 transition-colors uppercase">
+                                                            {meal.type || meal.name}
+                                                        </h5>
+                                                        {meal.time && (
+                                                            <span className="text-[9px] font-black text-zinc-600 bg-black/40 px-2 py-0.5 rounded-md border border-white/5 uppercase tracking-tighter">
+                                                                {meal.time}
                                                             </span>
-                                                        ))}
+                                                        )}
                                                     </div>
+                                                    <p className="text-xs text-zinc-400 font-bold leading-relaxed italic">
+                                                        {Array.isArray(meal.items) ? meal.items.join(' • ') : (meal.food || meal.items || "Components not specified.")}
+                                                    </p>
                                                 </div>
                                             </div>
                                         ))}

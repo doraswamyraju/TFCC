@@ -216,7 +216,7 @@ const EditWorkoutPlanModal = ({ isOpen, onClose, onSuccess, plan }: EditWorkoutP
                                                     <div className="col-span-1 border-r border-white/5 flex justify-center text-[10px] font-black text-zinc-600">
                                                         {eIdx + 1}
                                                     </div>
-                                                    <div className="col-span-5">
+                                                    <div className="col-span-4">
                                                         <input
                                                             placeholder="Exercise"
                                                             value={ex.name}
@@ -237,6 +237,14 @@ const EditWorkoutPlanModal = ({ isOpen, onClose, onSuccess, plan }: EditWorkoutP
                                                             placeholder="Reps"
                                                             value={ex.reps}
                                                             onChange={(e) => handleExerciseChange(dIdx, eIdx, 'reps', e.target.value)}
+                                                            className="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] font-bold text-white focus:border-[#ffd700] focus:outline-none text-center"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <input
+                                                            placeholder="Weight"
+                                                            value={ex.weight}
+                                                            onChange={(e) => handleExerciseChange(dIdx, eIdx, 'weight', e.target.value)}
                                                             className="w-full bg-black/20 border border-white/5 rounded-lg py-1.5 px-3 text-[11px] font-bold text-white focus:border-[#ffd700] focus:outline-none text-center"
                                                         />
                                                     </div>
