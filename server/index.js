@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+
+// Load .env explicitly from the same directory
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5003;
