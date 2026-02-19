@@ -22,7 +22,7 @@ const AddDietPlanModal = ({ isOpen, onClose, onSuccess }: AddDietPlanModalProps)
     const [formData, setFormData] = useState({
         name: '',
         description: '',
-        meals: [{ time: '', food: '', notes: '' }]
+        meals: [{ type: '', items: [''], calories: '', protein: '', carbs: '', fats: '' }]
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ const AddDietPlanModal = ({ isOpen, onClose, onSuccess }: AddDietPlanModalProps)
     const addMeal = () => {
         setFormData({
             ...formData,
-            meals: [...formData.meals, { time: '', food: '', notes: '' }]
+            meals: [...formData.meals, { type: '', items: [''], calories: '', protein: '', carbs: '', fats: '' }]
         });
     };
 
@@ -64,7 +64,11 @@ const AddDietPlanModal = ({ isOpen, onClose, onSuccess }: AddDietPlanModalProps)
             setIsSuccess(true);
             setTimeout(() => {
                 setIsSuccess(false);
-                setFormData({ name: '', description: '', meals: [{ time: '', food: '', notes: '' }] });
+                setFormData({
+                    name: '',
+                    description: '',
+                    meals: [{ type: '', items: [''], calories: '', protein: '', carbs: '', fats: '' }]
+                });
                 onSuccess();
                 onClose();
             }, 1500);
@@ -160,27 +164,16 @@ const AddDietPlanModal = ({ isOpen, onClose, onSuccess }: AddDietPlanModalProps)
                                         key={index}
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
-                                        className="grid grid-cols-12 gap-3 items-center bg-zinc-900/30 p-3 rounded-2xl border border-white/5"
+                                        className="space-y-4 bg-zinc-900/30 p-4 rounded-2xl border border-white/5"
                                     >
-                                        <div className="col-span-3">
+                                        <div className="flex justify-between items-center">
                                             <input
                                                 type="text"
-                                                placeholder="08:00 AM"
-                                                value={meal.time}
-                                                onChange={(e) => handleMealChange(index, 'time', e.target.value)}
-                                                className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-3 text-xs font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                                placeholder="Meal Type (e.g. Breakfast)"
+                                                value={meal.type}
+                                                onChange={(e) => handleMealChange(index, 'type', e.target.value)}
+                                                className="bg-transparent border-b border-white/10 py-1 text-sm font-black text-[#ffd700] focus:border-[#ffd700] focus:outline-none w-1/2"
                                             />
-                                        </div>
-                                        <div className="col-span-8">
-                                            <input
-                                                type="text"
-                                                placeholder="Oatmeal + Protein Shake"
-                                                value={meal.food}
-                                                onChange={(e) => handleMealChange(index, 'food', e.target.value)}
-                                                className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-3 text-xs font-bold text-white focus:border-[#c41e3a] focus:outline-none"
-                                            />
-                                        </div>
-                                        <div className="col-span-1 flex justify-center">
                                             <button
                                                 type="button"
                                                 onClick={() => removeMeal(index)}
@@ -188,6 +181,49 @@ const AddDietPlanModal = ({ isOpen, onClose, onSuccess }: AddDietPlanModalProps)
                                             >
                                                 <Trash2 size={16} />
                                             </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <input
+                                                type="text"
+                                                placeholder="Food Items (comma separated)"
+                                                value={meal.items.join(', ')}
+                                                onChange={(e) => {
+                                                    const newMeals = [...formData.meals];
+                                                    newMeals[index].items = e.target.value.split(',').map(s => s.trim());
+                                                    setFormData({ ...formData, meals: newMeals });
+                                                }}
+                                                className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-3 text-xs font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                            />
+                                            <div className="grid grid-cols-4 gap-2">
+                                                <input
+                                                    type="number"
+                                                    placeholder="Kcal"
+                                                    value={meal.calories}
+                                                    onChange={(e) => handleMealChange(index, 'calories', e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-2 text-[10px] font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Pro"
+                                                    value={meal.protein}
+                                                    onChange={(e) => handleMealChange(index, 'protein', e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-2 text-[10px] font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Carbs"
+                                                    value={meal.carbs}
+                                                    onChange={(e) => handleMealChange(index, 'carbs', e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-2 text-[10px] font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Fats"
+                                                    value={meal.fats}
+                                                    onChange={(e) => handleMealChange(index, 'fats', e.target.value)}
+                                                    className="w-full bg-black/50 border border-white/5 rounded-xl py-2 px-2 text-[10px] font-bold text-white focus:border-[#c41e3a] focus:outline-none"
+                                                />
+                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}

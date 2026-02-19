@@ -82,7 +82,8 @@ const UserDashboard = () => {
                     <h2 className="text-2xl font-black uppercase tracking-tight mb-1">Welcome Back,</h2>
                     <p className="text-[#ffd700] text-lg font-black uppercase leading-tight">{user?.name}</p>
                     <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
-                        <Calendar size={14} className="text-[#c41e3a]" /> Joined {new Date(user?.joinDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                        <Calendar size={14} className="text-[#c41e3a]" />
+                        Joined {user?.joinDate ? new Date(user.joinDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : 'Recently'}
                     </p>
                 </section>
 
@@ -196,7 +197,6 @@ const UserDashboard = () => {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-4">Daily Nutrition Protocol</h4>
                                         {dietPlan.meals.map((meal: any, idx: number) => (
                                             <div key={idx} className="bg-zinc-900/30 border border-white/5 rounded-3xl p-6 flex gap-5">
                                                 <div className="w-10 h-10 bg-zinc-800 rounded-xl flex flex-col items-center justify-center shrink-0">
@@ -204,10 +204,10 @@ const UserDashboard = () => {
                                                     <span className="text-[8px] font-bold mt-0.5 uppercase">{meal.time || 'N/A'}</span>
                                                 </div>
                                                 <div>
-                                                    <h5 className="font-black uppercase tracking-tight text-[#ffd700] mb-1">{meal.name}</h5>
-                                                    <p className="text-sm text-zinc-400 font-bold">{meal.description}</p>
+                                                    <h5 className="font-black uppercase tracking-tight text-[#ffd700] mb-1">{meal.type || meal.name}</h5>
+                                                    <p className="text-sm text-zinc-400 font-bold">{meal.description || (meal.calories ? `${meal.calories} kcal` : '')}</p>
                                                     <div className="flex flex-wrap gap-2 mt-3">
-                                                        {meal.foods?.map((food: string, fIdx: number) => (
+                                                        {(meal.items || meal.foods)?.map((food: string, fIdx: number) => (
                                                             <span key={fIdx} className="text-[9px] font-black uppercase tracking-widest bg-white/5 py-1 px-2.5 rounded-lg border border-white/5">
                                                                 {food}
                                                             </span>
@@ -249,45 +249,84 @@ const UserDashboard = () => {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 px-4">Training Regimen</h4>
-                                        {workoutPlan.exercises.map((ex: any, idx: number) => (
-                                            <div key={idx} className="bg-zinc-900/30 border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
-                                                <div className="flex gap-5 relative z-10">
-                                                    <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center shrink-0 border border-white/5">
-                                                        <Activity size={20} className="text-[#c41e3a]" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="font-black uppercase tracking-tight text-white mb-1 group-hover:text-[#c41e3a] transition-colors">{ex.name}</h5>
-                                                        <div className="flex items-center gap-4 mt-2">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Sets</span>
-                                                                <span className="text-sm font-black text-[#ffd700]">{ex.sets}</span>
-                                                            </div>
-                                                            <div className="w-px h-6 bg-white/5" />
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Reps</span>
-                                                                <span className="text-sm font-black text-[#ffd700]">{ex.reps}</span>
-                                                            </div>
-                                                            {ex.weight && (
-                                                                <>
-                                                                    <div className="w-px h-6 bg-white/5" />
-                                                                    <div className="flex flex-col">
-                                                                        <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Load</span>
-                                                                        <span className="text-sm font-black text-[#ffd700]">{ex.weight}</span>
+                                        {workoutPlan.days ? (
+                                            workoutPlan.days.map((day: any, dIdx: number) => (
+                                                <div key={dIdx} className="space-y-4">
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#c41e3a] px-4 mt-6">{day.dayName}</h4>
+                                                    {day.exercises.map((ex: any, idx: number) => (
+                                                        <div key={idx} className="bg-zinc-900/30 border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                                                            <div className="flex gap-5 relative z-10">
+                                                                <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center shrink-0 border border-white/5">
+                                                                    <Activity size={20} className="text-[#c41e3a]" />
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <h5 className="font-black uppercase tracking-tight text-white mb-1 group-hover:text-[#c41e3a] transition-colors">{ex.name}</h5>
+                                                                    <div className="flex items-center gap-4 mt-2">
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Sets</span>
+                                                                            <span className="text-sm font-black text-[#ffd700]">{ex.sets}</span>
+                                                                        </div>
+                                                                        <div className="w-px h-6 bg-white/5" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Reps</span>
+                                                                            <span className="text-sm font-black text-[#ffd700]">{ex.reps}</span>
+                                                                        </div>
+                                                                        {ex.weight && (
+                                                                            <>
+                                                                                <div className="w-px h-6 bg-white/5" />
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Load</span>
+                                                                                    <span className="text-sm font-black text-[#ffd700]">{ex.weight}</span>
+                                                                                </div>
+                                                                            </>
+                                                                        )}
                                                                     </div>
-                                                                </>
-                                                            )}
+                                                                    {ex.notes && (
+                                                                        <p className="text-[10px] text-zinc-500 font-bold mt-3 border-l-2 border-[#c41e3a] pl-3 py-1 italic">
+                                                                            {ex.notes}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <CheckCircle2 size={60} className="absolute -right-4 -bottom-4 text-green-500/[0.02] group-hover:text-green-500/[0.05] transition-all" />
                                                         </div>
-                                                        {ex.notes && (
-                                                            <p className="text-[10px] text-zinc-500 font-bold mt-3 border-l-2 border-[#c41e3a] pl-3 py-1 italic">
-                                                                {ex.notes}
-                                                            </p>
-                                                        )}
+                                                    ))}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            workoutPlan.exercises?.map((ex: any, idx: number) => (
+                                                <div key={idx} className="bg-zinc-900/30 border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                                                    <div className="flex gap-5 relative z-10">
+                                                        <div className="w-12 h-12 bg-zinc-800 rounded-2xl flex items-center justify-center shrink-0 border border-white/5">
+                                                            <Activity size={20} className="text-[#c41e3a]" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h5 className="font-black uppercase tracking-tight text-white mb-1 group-hover:text-[#c41e3a] transition-colors">{ex.name}</h5>
+                                                            <div className="flex items-center gap-4 mt-2">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Sets</span>
+                                                                    <span className="text-sm font-black text-[#ffd700]">{ex.sets}</span>
+                                                                </div>
+                                                                <div className="w-px h-6 bg-white/5" />
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Reps</span>
+                                                                    <span className="text-sm font-black text-[#ffd700]">{ex.reps}</span>
+                                                                </div>
+                                                                {ex.weight && (
+                                                                    <>
+                                                                        <div className="w-px h-6 bg-white/5" />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">Load</span>
+                                                                            <span className="text-sm font-black text-[#ffd700]">{ex.weight}</span>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <CheckCircle2 size={60} className="absolute -right-4 -bottom-4 text-green-500/[0.02] group-hover:text-green-500/[0.05] transition-all" />
-                                            </div>
-                                        ))}
+                                            ))
+                                        )}
                                     </div>
                                 </>
                             ) : (

@@ -126,7 +126,7 @@ const AdminDashboard = () => {
     const filteredUsers = allUsers.filter(u =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.gymId?.gymName.toLowerCase().includes(searchTerm.toLowerCase())
+        (u.gymId?.gymName && u.gymId.gymName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (loading) {
@@ -339,7 +339,9 @@ const AdminDashboard = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 mb-1">Joined</p>
-                                                    <p className="text-[10px] font-bold">{new Date(member.joinDate).toLocaleDateString()}</p>
+                                                    <p className="text-[10px] font-bold">
+                                                        {member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'N/A'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -502,7 +504,9 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="flex items-center gap-3 text-zinc-500">
                                                         <Calendar size={14} className="text-[#c41e3a]" />
-                                                        <span className="text-xs font-bold">Member Since {new Date(user.joinDate).toLocaleDateString()}</span>
+                                                        <span className="text-xs font-bold">
+                                                            Member Since {user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'System'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </motion.div>

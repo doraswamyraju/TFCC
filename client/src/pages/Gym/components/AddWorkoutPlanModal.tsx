@@ -85,7 +85,11 @@ const AddWorkoutPlanModal = ({ isOpen, onClose, onSuccess }: AddWorkoutPlanModal
             setIsSuccess(true);
             setTimeout(() => {
                 setIsSuccess(false);
-                setFormData({ name: '', description: '', days: [{ dayName: '', exercises: [{ name: '', sets: '', reps: '', weight: '' }] }] });
+                setFormData({
+                    name: '',
+                    description: '',
+                    days: [{ dayName: '', exercises: [{ name: '', sets: '', reps: '', weight: '' }] }]
+                });
                 onSuccess();
                 onClose();
             }, 1500);
