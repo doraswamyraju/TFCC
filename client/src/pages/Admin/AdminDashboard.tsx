@@ -128,7 +128,8 @@ const AdminDashboard = () => {
     );
 
     const filteredUsers = allUsers.filter(u => {
-        const searchTermLower = searchTerm.toLowerCase();
+        if (!u) return false;
+        const searchTermLower = (searchTerm || '').toLowerCase();
         const nameMatch = (u.name || '').toLowerCase().includes(searchTermLower);
         const emailMatch = (u.email || '').toLowerCase().includes(searchTermLower);
         const gymMatch = (u.gymId?.gymName || '').toLowerCase().includes(searchTermLower);

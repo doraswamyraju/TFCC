@@ -18,13 +18,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 
-interface UserData {
-    user: any;
-    gym: any;
-    dietPlan: any;
-    workoutPlan: any;
-}
-
 const UserDashboard = () => {
     const { logout } = useAuth();
     const [user, setUser] = useState<any>(null);
