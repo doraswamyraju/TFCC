@@ -54,6 +54,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/gym', require('./routes/gym'));
 app.use('/api/user', require('./routes/user'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Serve Frontend (Production)
 if (process.env.NODE_ENV === 'production') {

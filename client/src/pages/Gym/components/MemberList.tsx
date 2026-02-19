@@ -8,9 +8,14 @@ import {
     Mail,
     Phone,
     Calendar,
-    Loader2
+    Loader2,
+    Trash2,
+    Edit2,
+    ClipboardList
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import EditMemberModal from './EditMemberModal';
+import AssignPlanModal from './AssignPlanModal';
 
 interface Member {
     _id: string;
@@ -28,20 +33,43 @@ const MemberList = ({ onAddMember }: MemberListProps) => {
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+
+    const fetchMembers = async () => {
+        try {
+            setLoading(true);
+            const res = await axios.get('/api/gym/members');
+            setMembers(res.data);
+        } catch (err) {
+            console.error('Error fetching members', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchMembers = async () => {
-            try {
-                const res = await axios.get('/api/gym/members');
-                setMembers(res.data);
-            } catch (err) {
-                console.error('Error fetching members', err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchMembers();
     }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Are you sure you want to remove this member?')) return;
+
+        setIsDeleting(id);
+        try {
+            await axios.delete(`/api/gym/members/${id}`);
+            setMembers(members.filter(m => m._id !== id));
+        } catch (err) {
+            console.error('Error deleting member', err);
+            alert('Failed to delete member');
+        } finally {
+            setIsDeleting(null);
+            setOpenMenuId(null);
+        }
+    };
 
     const filteredMembers = members.filter(member =>
         member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,10 +158,68 @@ const MemberList = ({ onAddMember }: MemberListProps) => {
                                                 {new Date(member.joinDate).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors">
-                                                <MoreVertical size={18} />
-                                            </button>
+                                        <td className="px-6 py-4 text-right relative">
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={() => setOpenMenuId(openMenuId === member._id ? null : member._id)}
+                                                    className={`p-2 rounded-lg transition-all ${openMenuId === member._id ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'}`}
+                                                >
+                                                    <MoreVertical size={18} />
+                                                </button>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {openMenuId === member._id && (
+                                                    <>
+                                                        <div
+                                                            className="fixed inset-0 z-10"
+                                                            onClick={() => setOpenMenuId(null)}
+                                                        />
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                            className="absolute right-6 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl z-20 py-1.5 overflow-hidden"
+                                                        >
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedMember(member);
+                                                                    setIsEditModalOpen(true);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                                Edit Details
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedMember(member);
+                                                                    setIsAssignModalOpen(true);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                                                            >
+                                                                <ClipboardList size={16} />
+                                                                Assign Plan
+                                                            </button>
+                                                            <div className="h-px bg-zinc-800 my-1" />
+                                                            <button
+                                                                onClick={() => handleDelete(member._id)}
+                                                                disabled={isDeleting === member._id}
+                                                                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                                            >
+                                                                {isDeleting === member._id ? (
+                                                                    <Loader2 size={16} className="animate-spin" />
+                                                                ) : (
+                                                                    <Trash2 size={16} />
+                                                                )}
+                                                                Remove Member
+                                                            </button>
+                                                        </motion.div>
+                                                    </>
+                                                )}
+                                            </AnimatePresence>
                                         </td>
                                     </motion.tr>
                                 ))
@@ -164,7 +250,21 @@ const MemberList = ({ onAddMember }: MemberListProps) => {
                     </div>
                 )}
             </div>
-        </div>
+
+            <EditMemberModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                onSuccess={fetchMembers}
+                member={selectedMember}
+            />
+
+            <AssignPlanModal
+                isOpen={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
+                onSuccess={fetchMembers}
+                member={selectedMember}
+            />
+        </div >
     );
 };
 

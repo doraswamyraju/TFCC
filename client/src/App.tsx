@@ -6,9 +6,10 @@ import Login from './pages/Auth/Login';
 import GymSignup from './pages/Auth/GymSignup';
 import GymDashboard from './pages/Gym/Dashboard';
 import UserDashboard from './pages/User/Dashboard';
+import AdminDashboard from './pages/Admin/AdminDashboard';
 import { useAuth } from './context/AuthContext';
 
-const ProtectedRoute = ({ children, role }: { children: React.JSX.Element, role: 'gym' | 'user' }) => {
+const ProtectedRoute = ({ children, role }: { children: React.JSX.Element, role: 'gym' | 'user' | 'super_admin' }) => {
   const { isAuthenticated, role: userRole, loading } = useAuth();
 
   if (loading) {
@@ -23,7 +24,9 @@ const ProtectedRoute = ({ children, role }: { children: React.JSX.Element, role:
 
   // If authenticated but trying to access the wrong dashboard
   if (userRole && userRole !== role) {
-    return <Navigate to={userRole === 'gym' ? '/gym/dashboard' : '/user/dashboard'} replace />;
+    if (userRole === 'gym') return <Navigate to="/gym/dashboard" replace />;
+    if (userRole === 'user') return <Navigate to="/user/dashboard" replace />;
+    if (userRole === 'super_admin') return <Navigate to="/admin/dashboard" replace />;
   }
 
   return children;
@@ -45,6 +48,12 @@ export default function App() {
       <Route path="/user/dashboard" element={
         <ProtectedRoute role="user">
           <UserDashboard />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/admin/dashboard" element={
+        <ProtectedRoute role="super_admin">
+          <AdminDashboard />
         </ProtectedRoute>
       } />
 

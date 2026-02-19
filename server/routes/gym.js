@@ -77,6 +77,45 @@ router.post('/members', auth, gymAuth, async (req, res) => {
     }
 });
 
+// @route   PUT api/gym/members/:id
+// @desc    Update a member
+// @access  Private (Gym only)
+router.put('/members/:id', auth, gymAuth, async (req, res) => {
+    const { name, email, phone } = req.body;
+    try {
+        let user = await User.findOne({ _id: req.params.id, gymId: req.gym.id });
+        if (!user) {
+            return res.status(404).json({ msg: 'Member not found' });
+        }
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+
+        await user.save();
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   DELETE api/gym/members/:id
+// @desc    Delete a member
+// @access  Private (Gym only)
+router.delete('/members/:id', auth, gymAuth, async (req, res) => {
+    try {
+        const user = await User.findOneAndDelete({ _id: req.params.id, gymId: req.gym.id });
+        if (!user) {
+            return res.status(404).json({ msg: 'Member not found' });
+        }
+        res.json({ msg: 'Member removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/gym/plans/diet
 // @desc    Get all diet plans
 // @access  Private (Gym only)
@@ -110,6 +149,45 @@ router.post('/plans/diet', auth, gymAuth, async (req, res) => {
     }
 });
 
+// @route   PUT api/gym/plans/diet/:id
+// @desc    Update a diet plan
+// @access  Private (Gym only)
+router.put('/plans/diet/:id', auth, gymAuth, async (req, res) => {
+    const { name, description, meals } = req.body;
+    try {
+        let plan = await DietPlan.findOne({ _id: req.params.id, gymId: req.gym.id });
+        if (!plan) {
+            return res.status(404).json({ msg: 'Diet plan not found' });
+        }
+
+        if (name) plan.name = name;
+        if (description) plan.description = description;
+        if (meals) plan.meals = meals;
+
+        await plan.save();
+        res.json(plan);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   DELETE api/gym/plans/diet/:id
+// @desc    Delete a diet plan
+// @access  Private (Gym only)
+router.delete('/plans/diet/:id', auth, gymAuth, async (req, res) => {
+    try {
+        const plan = await DietPlan.findOneAndDelete({ _id: req.params.id, gymId: req.gym.id });
+        if (!plan) {
+            return res.status(404).json({ msg: 'Diet plan not found' });
+        }
+        res.json({ msg: 'Diet plan removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   GET api/gym/plans/workout
 // @desc    Get all workout plans
 // @access  Private (Gym only)
@@ -137,6 +215,45 @@ router.post('/plans/workout', auth, gymAuth, async (req, res) => {
         });
         const plan = await newPlan.save();
         res.json(plan);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   PUT api/gym/plans/workout/:id
+// @desc    Update a workout plan
+// @access  Private (Gym only)
+router.put('/plans/workout/:id', auth, gymAuth, async (req, res) => {
+    const { name, description, days } = req.body;
+    try {
+        let plan = await WorkoutPlan.findOne({ _id: req.params.id, gymId: req.gym.id });
+        if (!plan) {
+            return res.status(404).json({ msg: 'Workout plan not found' });
+        }
+
+        if (name) plan.name = name;
+        if (description) plan.description = description;
+        if (days) plan.days = days;
+
+        await plan.save();
+        res.json(plan);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   DELETE api/gym/plans/workout/:id
+// @desc    Delete a workout plan
+// @access  Private (Gym only)
+router.delete('/plans/workout/:id', auth, gymAuth, async (req, res) => {
+    try {
+        const plan = await WorkoutPlan.findOneAndDelete({ _id: req.params.id, gymId: req.gym.id });
+        if (!plan) {
+            return res.status(404).json({ msg: 'Workout plan not found' });
+        }
+        res.json({ msg: 'Workout plan removed' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

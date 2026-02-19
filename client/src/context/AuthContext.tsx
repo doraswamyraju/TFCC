@@ -10,11 +10,11 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    role: 'gym' | 'user' | null;
+    role: 'gym' | 'user' | 'super_admin' | null;
     token: string | null;
     isAuthenticated: boolean;
     loading: boolean;
-    login: (token: string, role: 'gym' | 'user', userData: User) => void;
+    login: (token: string, role: 'gym' | 'user' | 'super_admin', userData: User) => void;
     logout: () => void;
 }
 
@@ -22,14 +22,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [role, setRole] = useState<'gym' | 'user' | null>(null);
+    const [role, setRole] = useState<'gym' | 'user' | 'super_admin' | null>(null);
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
     // Initialize state from local storage on mount
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
-        const storedRole = localStorage.getItem('role') as 'gym' | 'user' | null;
+        const storedRole = localStorage.getItem('role') as 'gym' | 'user' | 'super_admin' | null;
         const storedUser = localStorage.getItem('user');
 
         if (storedToken) {
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    const login = (newToken: string, newRole: 'gym' | 'user', userData: User) => {
+    const login = (newToken: string, newRole: 'gym' | 'user' | 'super_admin', userData: User) => {
         localStorage.setItem('token', newToken);
         localStorage.setItem('role', newRole);
         localStorage.setItem('user', JSON.stringify(userData));
