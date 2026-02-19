@@ -1,30 +1,43 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// Load .env explicitly from the same directory
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+} else {
+    require('dotenv').config(); // Fallback to current working directory
+}
 
 const seedSuperAdmin = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/tfcc');
-        console.log('Connected to MongoDB...');
+        const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/tfcc';
+
+        // Safety masking for logs
+        const maskedUri = uri.replace(/\/\/.*@/, '//***:***@');
+        console.log('--- SYSTEM OVERSEER INITIALIZATION ---');
+        console.log('Connecting to Registry:', maskedUri);
+        console.log('Environment Path:', envPath);
+        console.log('Environment Loaded:', !!process.env.MONGO_URI ? 'YES' : 'NO (Using Default)');
+
+        await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+        console.log('Connection to MongoDB established.');
 
         const email = 'admin@tfcc.com';
-        const password = 'SuperSecureAdminPassword123!'; // User should change this ASAP
+        const password = 'SuperSecureAdminPassword123!';
 
-        // Check if admin already exists
+        console.log('Verifying identity registry...');
         let admin = await User.findOne({ email });
         if (admin) {
-            console.log('Super Admin already exists.');
+            console.log('Super Admin identity already verified in registry.');
             process.exit(0);
         }
 
-        // Create new Super Admin
-        // Note: Super Admin might not need a gymId, but the model says it's required.
-        // For now, we'll create a dummy Gym or use a reserved ID if the model allows null (checking model...)
-        // Model: gymId: { type: mongoose.Schema.Types.ObjectId, ref: 'Gym', required: true }
-
-        // Let's create a "System" gym first if it doesn't exist
         const Gym = require('./models/Gym');
+        console.log('Ensuring System Infrastructure exists...');
         let systemGym = await Gym.findOne({ gymName: 'FCC SYSTEM' });
         if (!systemGym) {
             systemGym = new Gym({
@@ -36,28 +49,34 @@ const seedSuperAdmin = async () => {
                 address: 'CLOUD'
             });
             await systemGym.save();
-            console.log('System Gym created.');
+            console.log('System Infrastructure initialized.');
         }
 
+        console.log('Deploying Super Admin credentials...');
         admin = new User({
             name: 'FCC Super Admin',
             email,
-            password: await bcrypt.hash(password, salt = 10),
+            password: await bcrypt.hash(password, 10),
             role: 'super_admin',
             gymId: systemGym._id
         });
 
         await admin.save();
         console.log('--------------------------------------------------');
-        console.log('SUPER ADMIN CREATED SUCCESSFULLY');
-        console.log(`Email: ${email}`);
-        console.log(`Password: ${password}`);
+        console.log('SUPER ADMIN DEPLOYED SUCCESSFULLY');
+        console.log(`Identifier: ${email}`);
+        console.log(`Access Key: ${password}`);
         console.log('--------------------------------------------------');
-        console.log('CRITICAL: Please log in and change your password immediately.');
+        console.log('CRITICAL: Synchronize entry credentials immediately.');
 
+        await mongoose.disconnect();
         process.exit(0);
     } catch (err) {
-        console.error('Seeding failed:', err.message);
+        console.error('--- DEPLOYMENT ABORTED ---');
+        console.error('Reason:', err.message);
+        if (err.message.includes('authentication') || err.message.includes('user')) {
+            console.error('SECURITY ALERT: MongoDB authentication denied. Verify MONGO_URI in .env');
+        }
         process.exit(1);
     }
 };
