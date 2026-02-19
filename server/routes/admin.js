@@ -56,6 +56,37 @@ router.get('/gyms', auth, adminAuth, async (req, res) => {
     }
 });
 
+// @route   GET api/admin/users
+// @desc    Get All Users across all gyms
+// @access  Private (Super Admin only)
+router.get('/users', auth, adminAuth, async (req, res) => {
+    try {
+        const users = await User.find({ role: 'user' })
+            .select('-password')
+            .populate('gymId', 'gymName')
+            .sort({ joinDate: -1 });
+        res.json(users);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// @route   GET api/admin/gyms/:id/members
+// @desc    Get All Members of a specific gym
+// @access  Private (Super Admin only)
+router.get('/gyms/:id/members', auth, adminAuth, async (req, res) => {
+    try {
+        const members = await User.find({ gymId: req.params.id, role: 'user' })
+            .select('-password')
+            .sort({ joinDate: -1 });
+        res.json(members);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // @route   DELETE api/admin/gyms/:id
 // @desc    Remove a Gym and its members
 // @access  Private (Super Admin only)
