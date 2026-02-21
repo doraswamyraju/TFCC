@@ -2,8 +2,10 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 import Home from './pages/Home';
+import HomeV2 from './pages/HomeV2';
 import Login from './pages/Auth/Login';
 import GymSignup from './pages/Auth/GymSignup';
+
 import GymDashboard from './pages/Gym/Dashboard';
 import UserDashboard from './pages/User/Dashboard';
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -36,6 +38,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/v2" element={<HomeV2 />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register-gym" element={<GymSignup />} />
 
