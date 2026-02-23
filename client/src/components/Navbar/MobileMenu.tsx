@@ -48,14 +48,25 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                         >
                           <div className="flex flex-col py-1">
                             {item.children.map((child) => (
-                              <a
-                                key={child.href}
-                                href={child.href}
-                                onClick={onClose}
-                                className="text-[#b0b0b0] hover:text-[#d4af37] py-2.5 px-6 text-sm transition-colors border-l-2 border-transparent hover:border-[#d4af37]"
-                              >
-                                {child.label}
-                              </a>
+                              child.href.startsWith('/') ? (
+                                <Link
+                                  key={child.href}
+                                  to={child.href}
+                                  onClick={onClose}
+                                  className="text-[#b0b0b0] hover:text-[#d4af37] py-2.5 px-6 text-sm transition-colors border-l-2 border-transparent hover:border-[#d4af37]"
+                                >
+                                  {child.label}
+                                </Link>
+                              ) : (
+                                <a
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={onClose}
+                                  className="text-[#b0b0b0] hover:text-[#d4af37] py-2.5 px-6 text-sm transition-colors border-l-2 border-transparent hover:border-[#d4af37]"
+                                >
+                                  {child.label}
+                                </a>
+                              )
                             ))}
                           </div>
                         </motion.div>
@@ -63,13 +74,23 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
                     </AnimatePresence>
                   </>
                 ) : (
-                  <a
-                    href={item.href}
-                    onClick={onClose}
-                    className="text-white hover:text-[#d4af37] py-3 px-4 rounded-lg transition-colors text-base font-medium"
-                  >
-                    {item.label}
-                  </a>
+                  item.href.startsWith('/') ? (
+                    <Link
+                      to={item.href}
+                      onClick={onClose}
+                      className="text-white hover:text-[#d4af37] py-3 px-4 rounded-lg transition-colors text-base font-medium"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={item.href}
+                      onClick={onClose}
+                      className="text-white hover:text-[#d4af37] py-3 px-4 rounded-lg transition-colors text-base font-medium"
+                    >
+                      {item.label}
+                    </a>
+                  )
                 )}
               </div>
             ))}

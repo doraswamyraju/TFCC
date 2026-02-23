@@ -9,6 +9,7 @@ import GymSignup from './pages/Auth/GymSignup';
 import GymDashboard from './pages/Gym/Dashboard';
 import UserDashboard from './pages/User/Dashboard';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+const ArmWrestling = React.lazy(() => import('./pages/Competitions/ArmWrestling'));
 import { useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children, role }: { children: React.JSX.Element, role: 'gym' | 'user' | 'super_admin' }) => {
@@ -41,6 +42,11 @@ export default function App() {
       <Route path="/v2" element={<HomeV2 />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register-gym" element={<GymSignup />} />
+      <Route path="/competitions/armwrestling" element={
+        <React.Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center"><Loader className="w-8 h-8 text-[#d4af37] animate-spin" /></div>}>
+          <ArmWrestling />
+        </React.Suspense>
+      } />
 
       <Route path="/gym/dashboard" element={
         <ProtectedRoute role="gym">

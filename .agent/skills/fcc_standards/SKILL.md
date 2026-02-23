@@ -87,10 +87,14 @@ NEVER assume frontend state. ALWAYS verify against `server/models/`.
 
 ---
 
-## 🚦 Deployment Sequence
+## 🚦 Deployment & Testing Protocol
 
-Every feature must be verified in this order:
-1. **Local Build**: `npm run build` in `/client`.
-2. **Path Correction**: Ensure all `axios` calls use relative or environment-aware paths.
-3. **Sync**: Push to `main`.
-4. **VPS Tactical**: `git pull` -> `npm run build` -> `pm2 restart all`.
+To maintain absolute parity with the production environment, follow this "Live-First" protocol:
+
+1. **Local Development**: Code features locally but **DO NOT** perform local browser testing.
+2. **Push to Source**: Sync changes to `main` immediately after coding.
+3. **VPS Sync**: Pull changes onto the VPS.
+4. **Build & Live Test**: Perform all verification, visual inspections, and functional testing directly on the live VPS environment (`tfcc.sriddha.com` or `/v2`).
+
+> [!CAUTION] 
+> Never rely on local environment behavior for final sign-off. If it's not tested on the VPS, it's not verified.

@@ -6,11 +6,11 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { href: '#home', label: 'Home' },
-  { 
-    href: '#events', 
+  {
+    href: '#events',
     label: 'Events',
     children: [
-      { href: '#events-armwrestling', label: 'Arm Wrestling Competition' },
+      { href: '/competitions/armwrestling', label: 'Arm Wrestling Competition' },
       { href: '#events-cycling', label: 'Cycling Competition' },
       { href: '#events-deadlift', label: 'Deadlift Competition' },
       { href: '#events-legkicks', label: 'Leg Kicks Competition' },
@@ -19,8 +19,8 @@ export const navItems: NavItem[] = [
       { href: '#events-skipping', label: 'Skipping Competition' },
     ]
   },
-  { 
-    href: '#strongest-human', 
+  {
+    href: '#strongest-human',
     label: 'Strongest Human',
     children: [
       { href: '#strongest-woman', label: 'Strongest Woman Competition' },
@@ -28,8 +28,8 @@ export const navItems: NavItem[] = [
     ]
   },
   { href: '#university', label: 'University' },
-  { 
-    href: '#coaches', 
+  {
+    href: '#coaches',
     label: 'Coaches',
     children: [
       { href: '#coaches-athletes', label: 'Athletes' },
