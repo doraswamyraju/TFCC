@@ -12,9 +12,7 @@ import {
     Plus,
     Trash2,
     Edit,
-    MoreVertical,
     Search,
-    Loader2,
     TrendingUp,
     MapPin,
     Mail,
@@ -23,8 +21,6 @@ import {
     X,
     Clock,
     CheckCircle2,
-    ChevronRight,
-    User as UserIcon,
     Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -48,7 +44,6 @@ const AdminDashboard = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'events' | 'athletes' | 'blog' | 'gallery'>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     // Data States
@@ -68,7 +63,6 @@ const AdminDashboard = () => {
     });
 
     const fetchData = async () => {
-        setLoading(true);
         try {
             const [enqRes, evRes] = await Promise.all([
                 axios.get('/api/admin/cms/enquiries'),
@@ -84,8 +78,6 @@ const AdminDashboard = () => {
             });
         } catch (err: any) {
             setError('System Alert: Tactical data synchronization failed.');
-        } finally {
-            setLoading(false);
         }
     };
 
