@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import axios from 'axios';
 import { Navbar } from '../components/Navbar';
 import { HeroV2 as Hero } from '../components/HeroV2';
 import { SocialFab } from '../components/SocialFab';
@@ -80,21 +81,26 @@ export default function Home() {
         };
     }, []);
 
-    const handleFormSubmit = (e: React.FormEvent) => {
+    const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        setFormSubmitted(true);
-        setTimeout(() => {
-            setFormSubmitted(false);
-            setFormData({
-                name: '',
-                email: '',
-                phone: '',
-                institution: '',
-                category: '',
-                message: ''
-            });
-        }, 3000);
+        try {
+            await axios.post('/api/enquiries', formData);
+            setFormSubmitted(true);
+            setTimeout(() => {
+                setFormSubmitted(false);
+                setFormData({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    institution: '',
+                    category: '',
+                    message: ''
+                });
+            }, 5000);
+        } catch (err) {
+            console.error('Submission failed:', err);
+            alert('Strategic connection failed. Please try again or contact support directly.');
+        }
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

@@ -1,87 +1,112 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    Activity,
-    Users,
-    Building2,
+    LayoutDashboard,
+    MessageSquare,
+    Calendar,
+    Zap,
+    BookOpen,
+    Image as ImageIcon,
     ShieldCheck,
     LogOut,
+    Plus,
     Trash2,
+    Edit,
     MoreVertical,
     Search,
     Loader2,
     TrendingUp,
     MapPin,
     Mail,
-    ArrowLeft,
-    Calendar,
-    UserCircle
+    ArrowRight,
+    Menu,
+    X,
+    Clock,
+    CheckCircle2,
+    ChevronRight,
+    User as UserIcon,
+    Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 
-interface GymStats {
-    totalGyms: number;
-    totalMembers: number;
-    activeGyms: number;
-}
+// --- Sub-components for CMS ---
 
-interface Gym {
-    _id: string;
-    gymName: string;
-    ownerName: string;
-    email: string;
-    phone: string;
-    address: string;
-    memberCount: number;
-    joinDate: string;
-}
-
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    phone: string;
-    gymId?: {
-        _id: string;
-        gymName: string;
-    };
-    joinDate: string;
-}
+const SectionHeader = ({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) => (
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+            <h2 className="text-4xl font-black uppercase tracking-tighter mb-2 italic">
+                <span className="text-white">Strategic</span> <span className="text-[#c41e3a]">{title}</span>
+            </h2>
+            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em]">{subtitle}</p>
+        </div>
+        {action && <div>{action}</div>}
+    </div>
+);
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
-    const [stats, setStats] = useState<GymStats | null>(null);
-    const [gyms, setGyms] = useState<Gym[]>([]);
-    const [allUsers, setAllUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'gyms' | 'users'>('gyms');
-    const [selectedGym, setSelectedGym] = useState<Gym | null>(null);
-    const [gymMembers, setGymMembers] = useState<User[]>([]);
-    const [loadingMembers, setLoadingMembers] = useState(false);
-
-    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'overview' | 'enquiries' | 'events' | 'athletes' | 'blog' | 'gallery'>('overview');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Data States
+    const [stats, setStats] = useState({ enquiries: 0, events: 0, blogPosts: 0, athletes: 0 });
+    const [enquiries, setEnquiries] = useState([]);
+    const [events, setEvents] = useState([]);
+
+    // Modal States
+    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+    const [eventForm, setEventForm] = useState({
+        title: '',
+        date: '',
+        location: '',
+        type: 'Competition',
+        description: '',
+        image: ''
+    });
+
     const fetchData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            setError(null);
-            const [statsRes, gymsRes, usersRes] = await Promise.all([
-                axios.get('/api/admin/stats'),
-                axios.get('/api/admin/gyms'),
-                axios.get('/api/admin/users')
+            const [enqRes, evRes] = await Promise.all([
+                axios.get('/api/admin/cms/enquiries'),
+                axios.get('/api/admin/cms/events')
             ]);
-            setStats(statsRes.data);
-            setGyms(gymsRes.data);
-            setAllUsers(usersRes.data);
+            setEnquiries(enqRes.data);
+            setEvents(evRes.data);
+            setStats({
+                enquiries: enqRes.data.length,
+                events: evRes.data.length,
+                blogPosts: 0,
+                athletes: 0
+            });
         } catch (err: any) {
-            console.error('Error fetching admin data', err);
-            setError(err.response?.data?.msg || 'System failure: Strategic reconnaissance data unavailable.');
+            setError('System Alert: Tactical data synchronization failed.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEventSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/admin/cms/events', eventForm);
+            setIsEventModalOpen(false);
+            fetchData();
+            setEventForm({ title: '', date: '', location: '', type: 'Competition', description: '', image: '' });
+        } catch (err) {
+            setError('Strategic Error: Event deployment failed.');
+        }
+    };
+
+    const handleStatusUpdate = async (id: string, status: string) => {
+        try {
+            await axios.put(`/api/admin/cms/enquiries/${id}`, { status });
+            fetchData();
+        } catch (err) {
+            setError('Operational Error: Status update failed.');
         }
     };
 
@@ -89,476 +114,476 @@ const AdminDashboard = () => {
         fetchData();
     }, []);
 
-    const fetchGymMembers = async (gym: Gym) => {
-        setLoadingMembers(true);
-        setSelectedGym(gym);
-        try {
-            const res = await axios.get(`/api/admin/gyms/${gym._id}/members`);
-            setGymMembers(res.data);
-        } catch (err) {
-            console.error('Error fetching gym members', err);
-        } finally {
-            setLoadingMembers(false);
-        }
-    };
+    const navItems = [
+        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'enquiries', label: 'Competition Inquiries', icon: MessageSquare },
+        { id: 'events', label: 'Championships', icon: Calendar },
+        { id: 'athletes', label: 'Strongest Human', icon: Zap },
+        { id: 'blog', label: 'The Blog', icon: BookOpen },
+        { id: 'gallery', label: 'Media Gallery', icon: ImageIcon },
+    ];
 
-    const handleDeleteGym = async (id: string, name: string) => {
-        if (!window.confirm(`CRITICAL: Are you sure you want to PERMANENTLY remove "${name}" and all its members from the system?`)) return;
-
-        setIsDeleting(id);
-        try {
-            await axios.delete(`/api/admin/gyms/${id}`);
-            setGyms(gyms.filter(g => g._id !== id));
-            // Refresh stats
-            const statsRes = await axios.get('/api/admin/stats');
-            setStats(statsRes.data);
-        } catch (err) {
-            console.error('Error deleting gym', err);
-            alert('Failed to terminate gym partnership.');
-        } finally {
-            setIsDeleting(null);
-            setOpenMenuId(null);
-        }
-    };
-
-    const filteredGyms = gyms.filter(g =>
-        g.gymName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        g.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        g.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const filteredUsers = allUsers.filter(u => {
-        if (!u) return false;
-        const searchTermLower = (searchTerm || '').toLowerCase();
-        const nameMatch = (u.name || '').toLowerCase().includes(searchTermLower);
-        const emailMatch = (u.email || '').toLowerCase().includes(searchTermLower);
-        const gymMatch = (u.gymId?.gymName || '').toLowerCase().includes(searchTermLower);
-        return nameMatch || emailMatch || gymMatch;
-    });
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-[#c41e3a] animate-spin" />
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#c41e3a]/30 pb-20">
-            {/* Top Navigation */}
-            <nav className="border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#c41e3a] to-[#8a1529] rounded-2xl flex items-center justify-center shadow-lg shadow-[#c41e3a]/20">
-                            <ShieldCheck className="text-white" size={24} />
-                        </div>
-                        <div>
-                            <h1 className="text-xl font-black uppercase tracking-tighter">FCC Admin</h1>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] leading-none">Global Oversight Terminal</p>
-                        </div>
+    const Sidebar = () => (
+        <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-black border-r border-white/5 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out`}>
+            <div className="h-full flex flex-col p-6">
+                <div className="flex items-center gap-4 mb-12 px-2">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#c41e3a] to-[#8a1529] rounded-xl flex items-center justify-center shadow-lg shadow-[#c41e3a]/20">
+                        <ShieldCheck className="text-white" size={20} />
                     </div>
-
-                    <div className="flex items-center gap-6">
-                        <div className="hidden md:block text-right">
-                            <p className="text-xs font-black uppercase tracking-widest text-[#ffd700]">{user?.name}</p>
-                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">System Overseer</p>
-                        </div>
-                        <button
-                            onClick={logout}
-                            className="p-3 bg-zinc-900/50 hover:bg-red-500/10 text-zinc-400 hover:text-red-500 rounded-2xl transition-all border border-white/5"
-                        >
-                            <LogOut size={20} />
-                        </button>
+                    <div>
+                        <h1 className="text-lg font-black uppercase tracking-tighter text-white">FCC Terminal</h1>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Global Oversight</p>
                     </div>
                 </div>
-            </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-12 space-y-12">
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-red-500/10 border border-red-500/20 p-8 rounded-[2rem] flex flex-col items-center text-center gap-6"
-                    >
-                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
-                            <Activity size={32} />
-                        </div>
-                        <div>
-                            <h4 className="text-xl font-black uppercase text-white mb-2 italic">Strategic Communications Interrupted</h4>
-                            <p className="text-zinc-500 text-sm font-bold uppercase tracking-widest max-w-md mx-auto">{error}</p>
-                        </div>
+                <nav className="flex-1 space-y-2">
+                    {navItems.map((item) => (
                         <button
-                            onClick={fetchData}
-                            className="px-8 py-3 bg-[#c41e3a] text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#a01830] transition-all shadow-xl shadow-[#c41e3a]/20 active:scale-95"
+                            key={item.id}
+                            onClick={() => {
+                                setActiveTab(item.id as any);
+                                setIsSidebarOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === item.id ? 'bg-[#c41e3a] text-white shadow-lg shadow-[#c41e3a]/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
                         >
-                            Re-initiate Handshake
+                            <item.icon size={18} />
+                            {item.label}
                         </button>
-                    </motion.div>
-                )}
+                    ))}
+                </nav>
 
-                {/* Stats Grid */}
-                {!selectedGym && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="pt-6 border-t border-white/5 space-y-4">
+                    <div className="flex items-center gap-3 px-4 py-2">
+                        <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-black">
+                            {user?.name?.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[10px] font-black text-white truncate">{user?.name}</p>
+                            <p className="text-[9px] text-zinc-500 font-bold uppercase">Overseer</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-[#c41e3a] hover:bg-red-500/5 transition-all"
+                    >
+                        <LogOut size={18} />
+                        Detach
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-[#c41e3a]/30">
+            <Sidebar />
+
+            {/* Event Creation Modal */}
+            <AnimatePresence>
+                {isEventModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] relative overflow-hidden group hover:border-[#c41e3a]/30 transition-all"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsEventModalOpen(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl"
                         >
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Partner Gyms</p>
-                                    <h3 className="text-4xl font-black">{stats?.totalGyms || 0}</h3>
-                                    <div className="mt-4 flex items-center gap-2 text-green-500 text-[10px] font-bold uppercase tracking-wider bg-green-500/10 py-1 px-2 rounded-lg w-fit">
-                                        <TrendingUp size={12} /> Live Sync
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#c41e3a] via-[#ffd700] to-[#c41e3a]" />
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="text-2xl font-black uppercase italic tracking-tighter">Initialize Championship</h3>
+                                <button onClick={() => setIsEventModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors"><X size={20} /></button>
+                            </div>
+
+                            <form onSubmit={handleEventSubmit} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Operation Name</label>
+                                        <input
+                                            required
+                                            value={eventForm.title}
+                                            onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                                            placeholder="e.g. Hyderabad Strongman Open"
+                                            className="w-full bg-black border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-[#c41e3a] outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Deployment Type</label>
+                                        <select
+                                            value={eventForm.type}
+                                            onChange={(e) => setEventForm({ ...eventForm, type: e.target.value })}
+                                            className="w-full bg-black border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-[#c41e3a] outline-none"
+                                        >
+                                            <option value="Competition">Competition</option>
+                                            <option value="Seminar">Seminar</option>
+                                            <option value="Training">Training</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-[#c41e3a]/10 group-hover:text-[#c41e3a] transition-all">
-                                    <Building2 size={24} />
-                                </div>
-                            </div>
-                            <div className="absolute -right-8 -bottom-8 opacity-[0.02] group-hover:opacity-[0.05] transition-all">
-                                <Building2 size={160} />
-                            </div>
-                        </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] relative overflow-hidden group hover:border-[#ffd700]/30 transition-all"
-                        >
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">Total Trainees</p>
-                                    <h3 className="text-4xl font-black">{stats?.totalMembers || 0}</h3>
-                                    <div className="mt-4 flex items-center gap-2 text-[#ffd700] text-[10px] font-bold uppercase tracking-wider bg-[#ffd700]/10 py-1 px-2 rounded-lg w-fit">
-                                        <Activity size={12} /> Real-time Sync
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Coordinates (Location)</label>
+                                        <input
+                                            required
+                                            value={eventForm.location}
+                                            onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                                            placeholder="City, Venue..."
+                                            className="w-full bg-black border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-[#c41e3a] outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Launch Date</label>
+                                        <input
+                                            required
+                                            type="date"
+                                            value={eventForm.date}
+                                            onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                                            className="w-full bg-black border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-[#c41e3a] outline-none"
+                                        />
                                     </div>
                                 </div>
-                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-[#ffd700]/10 group-hover:text-[#ffd700] transition-all">
-                                    <Users size={24} />
-                                </div>
-                            </div>
-                            <div className="absolute -right-8 -bottom-8 opacity-[0.02] group-hover:opacity-[0.05] transition-all">
-                                <Users size={160} />
-                            </div>
-                        </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] relative overflow-hidden group hover:border-blue-500/30 transition-all"
-                        >
-                            <div className="relative z-10 flex justify-between items-start">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-2">System Health</p>
-                                    <h3 className="text-4xl font-black">99.9%</h3>
-                                    <div className="mt-4 flex items-center gap-2 text-blue-500 text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 py-1 px-2 rounded-lg w-fit">
-                                        <ShieldCheck size={12} /> Secure
-                                    </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Strategic Brief (Description)</label>
+                                    <textarea
+                                        required
+                                        rows={4}
+                                        value={eventForm.description}
+                                        onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                                        placeholder="Details about the championship..."
+                                        className="w-full bg-black border border-white/5 rounded-xl py-3 px-4 text-sm font-bold focus:border-[#c41e3a] outline-none resize-none"
+                                    />
                                 </div>
-                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-blue-500/10 group-hover:text-blue-500 transition-all">
-                                    <Activity size={24} />
-                                </div>
-                            </div>
-                            <div className="absolute -right-8 -bottom-8 opacity-[0.02] group-hover:opacity-[0.05] transition-all">
-                                <Activity size={160} />
-                            </div>
+
+                                <button
+                                    type="submit"
+                                    className="w-full bg-gradient-to-r from-[#c41e3a] to-[#8a1529] py-4 rounded-xl text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-[#c41e3a]/20"
+                                >
+                                    Confirm Deployment
+                                </button>
+                            </form>
                         </motion.div>
                     </div>
                 )}
+            </AnimatePresence>
 
-                {/* Tab Controls & Search */}
-                {
-                    !selectedGym && (
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 border-b border-white/5 pb-8">
-                            <div className="flex bg-zinc-900/50 p-1.5 rounded-[1.5rem] border border-white/5 w-fit">
-                                <button
-                                    onClick={() => setActiveTab('gyms')}
-                                    className={`px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'gyms' ? 'bg-[#c41e3a] text-white shadow-lg shadow-[#c41e3a]/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                >
-                                    Gym Registry
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('users')}
-                                    className={`px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-[#c41e3a] text-white shadow-lg shadow-[#c41e3a]/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-                                >
-                                    User Directory
-                                </button>
-                            </div>
-
-                            <div className="relative group flex-1 max-w-md">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#c41e3a] transition-colors" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder={activeTab === 'gyms' ? "Search Gyms, Owners..." : "Search Trainees, Emails, Gyms..."}
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="bg-zinc-900/50 border border-white/5 rounded-2xl py-4 pl-12 pr-6 w-full focus:outline-none focus:border-[#c41e3a] transition-all font-bold text-sm placeholder-zinc-700"
-                                />
-                            </div>
+            {/* Main Content Area */}
+            <div className="lg:ml-72 min-h-screen">
+                {/* Mobile Header */}
+                <header className="lg:hidden h-20 px-6 border-b border-white/5 bg-black/50 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-[#c41e3a] rounded-lg flex items-center justify-center">
+                            <ShieldCheck size={16} />
                         </div>
-                    )
-                }
+                        <h2 className="text-sm font-black uppercase tracking-tighter">FCC Admin</h2>
+                    </div>
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="p-2 text-zinc-400 hover:text-white transition-colors"
+                    >
+                        <Menu size={24} />
+                    </button>
+                </header>
 
-                {/* Gym Deep-Dive View */}
-                {
-                    selectedGym && (
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="space-y-8"
-                        >
-                            <button
-                                onClick={() => setSelectedGym(null)}
-                                className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors group"
-                            >
-                                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-                                <span className="text-xs font-black uppercase tracking-widest">Back to Directory</span>
+                <main className="p-6 md:p-12 max-w-7xl mx-auto">
+                    {error && (
+                        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl mb-12 flex items-center justify-between text-red-500">
+                            <p className="text-sm font-bold uppercase tracking-widest italic">{error}</p>
+                            <button onClick={fetchData} className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-xl transition-all">
+                                Retry Handshake
                             </button>
+                        </div>
+                    )}
 
-                            <div className="bg-gradient-to-br from-zinc-900 to-black border border-white/5 rounded-[2.5rem] p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-24 h-24 bg-[#c41e3a] rounded-3xl flex items-center justify-center shadow-2xl shadow-[#c41e3a]/20">
-                                        <Building2 size={48} className="text-white" />
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'overview' && (
+                            <motion.div
+                                key="overview"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="space-y-12"
+                            >
+                                <SectionHeader title="Dashboard" subtitle="Global Performance Overview" />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {[
+                                        { label: 'Total Inquiries', value: stats.enquiries, icon: MessageSquare, color: 'text-blue-500' },
+                                        { label: 'Active Events', value: stats.events, icon: Calendar, color: 'text-[#ffd700]' },
+                                        { label: 'Blog Posts', value: stats.blogPosts, icon: BookOpen, color: 'text-green-500' },
+                                        { label: 'Athletes', value: stats.athletes, icon: Zap, color: 'text-[#c41e3a]' },
+                                    ].map((stat) => (
+                                        <div key={stat.label} className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] group hover:border-white/10 transition-all">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className={`p-3 bg-white/5 rounded-2xl ${stat.color} group-hover:scale-110 transition-transform`}>
+                                                    <stat.icon size={24} />
+                                                </div>
+                                                <TrendingUp size={16} className="text-zinc-600" />
+                                            </div>
+                                            <h4 className="text-4xl font-black mb-1">{stat.value}</h4>
+                                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em]">{stat.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Quick Actions & Recent Enquiries */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                                    <div className="lg:col-span-2 space-y-6">
+                                        <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-3">
+                                            <Clock size={20} className="text-[#c41e3a]" /> Recent Personnel Signals
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {enquiries.slice(0, 5).map((enq: any) => (
+                                                <div key={enq._id} className="bg-zinc-900/20 border border-white/5 p-6 rounded-[2rem] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-[#ffd700] font-black uppercase text-xs">
+                                                            {enq.name?.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="font-black uppercase tracking-tight text-sm">{enq.name}</h5>
+                                                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{enq.category} · {enq.institution || 'Individual'}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${enq.status === 'pending' ? 'bg-orange-500/10 text-orange-500' : 'bg-green-500/10 text-green-500'}`}>
+                                                            {enq.status}
+                                                        </span>
+                                                        <button className="p-2 text-zinc-600 hover:text-white transition-colors">
+                                                            <ArrowRight size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {enquiries.length === 0 && <div className="text-zinc-700 font-black uppercase text-xs py-10">Zero signals detected.</div>}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#ffd700] mb-2">Partner Analysis</p>
-                                        <h2 className="text-4xl font-black uppercase tracking-tighter">{selectedGym.gymName}</h2>
-                                        <div className="flex items-center gap-4 mt-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
-                                            <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#c41e3a]" /> {selectedGym.address}</span>
-                                            <span className="w-1 h-1 bg-zinc-800 rounded-full" />
-                                            <span className="flex items-center gap-1.5"><Mail size={14} className="text-[#c41e3a]" /> {selectedGym.email}</span>
+
+                                    <div className="space-y-6">
+                                        <h3 className="text-lg font-black uppercase tracking-tight">System Actions</h3>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <button onClick={() => setActiveTab('events')} className="w-full bg-gradient-to-r from-[#c41e3a] to-[#8a1529] p-6 rounded-[2rem] text-left group overflow-hidden relative shadow-lg shadow-[#c41e3a]/10">
+                                                <Calendar className="absolute -right-4 -bottom-4 text-white/10 w-32 h-32 group-hover:scale-110 transition-transform" />
+                                                <h4 className="text-sm font-black uppercase tracking-widest mb-1">New Championship</h4>
+                                                <p className="text-[9px] font-bold text-white/50 uppercase">Initialize new event protocols</p>
+                                            </button>
+                                            <button onClick={() => setActiveTab('blog')} className="w-full bg-white/5 border border-white/10 p-6 rounded-[2rem] text-left group hover:bg-white/10 transition-all">
+                                                <h4 className="text-sm font-black uppercase tracking-widest mb-1">Draft Article</h4>
+                                                <p className="text-[9px] font-bold text-zinc-500 uppercase">Broadcast strategic communications</p>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6">
-                                    <div className="text-center md:text-right">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 leading-none mb-1">Active Trainees</p>
-                                        <p className="text-4xl font-black text-[#ffd700]">{selectedGym.memberCount}</p>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'enquiries' && (
+                            <motion.div
+                                key="enquiries"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="space-y-12"
+                            >
+                                <SectionHeader title="Inquiries" subtitle="Managed Personnel Communications" />
+
+                                <div className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] overflow-hidden">
+                                    <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        <div className="relative flex-1 max-w-md group">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#c41e3a]" size={16} />
+                                            <input
+                                                type="text"
+                                                placeholder="Intercept signal by name, email, or category..."
+                                                className="w-full bg-black border border-white/5 rounded-2xl py-3 pl-12 pr-6 text-sm font-bold placeholder-zinc-700 focus:outline-none focus:border-[#c41e3a] transition-all"
+                                            />
+                                        </div>
+                                        <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                            <Filter size={14} /> Filter Logic
+                                        </button>
                                     </div>
-                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                        <Users size={32} className="text-zinc-500" />
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="border-b border-white/5">
+                                                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Subject</th>
+                                                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Contact</th>
+                                                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Category</th>
+                                                    <th className="px-8 py-6 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Status</th>
+                                                    <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-widest text-zinc-500">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-white/5">
+                                                {enquiries.map((enq: any) => (
+                                                    <tr key={enq._id} className="hover:bg-white/[0.02] transition-colors">
+                                                        <td className="px-8 py-6">
+                                                            <p className="font-black text-sm uppercase">{enq.name}</p>
+                                                            <p className="text-[9px] text-zinc-500 font-bold uppercase truncate max-w-[200px]">{enq.institution || 'N/A'}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <p className="text-xs font-bold text-zinc-400">{enq.email}</p>
+                                                            <p className="text-[10px] font-black text-[#ffd700]">{enq.phone}</p>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                                                            {enq.category}
+                                                        </td>
+                                                        <td className="px-8 py-6">
+                                                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${enq.status === 'pending' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' : 'bg-green-500/10 text-green-500 border border-green-500/20'}`}>
+                                                                {enq.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-8 py-6 text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                {enq.status === 'pending' && (
+                                                                    <button
+                                                                        onClick={() => handleStatusUpdate(enq._id, 'contacted')}
+                                                                        className="p-3 bg-white/5 hover:bg-white/10 text-[#ffd700] rounded-xl transition-all"
+                                                                        title="Mark as Contacted"
+                                                                    >
+                                                                        <Mail size={16} />
+                                                                    </button>
+                                                                )}
+                                                                {enq.status !== 'processed' && (
+                                                                    <button
+                                                                        onClick={() => handleStatusUpdate(enq._id, 'processed')}
+                                                                        className="p-3 bg-white/5 hover:bg-white/10 text-green-500 rounded-xl transition-all"
+                                                                        title="Resolution Successful"
+                                                                    >
+                                                                        <CheckCircle2 size={16} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
+                        )}
 
-                            <div className="space-y-6">
-                                <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-3">
-                                    <Users size={20} className="text-[#c41e3a]" /> Registered Member Roster
-                                </h3>
-                                {loadingMembers ? (
-                                    <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-[#c41e3a]" /></div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {gymMembers.map((member) => (
-                                            <div key={member._id} className="bg-zinc-900/30 border border-white/5 rounded-3xl p-6 hover:bg-zinc-800/20 transition-all">
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center text-[#ffd700] font-black">
-                                                        {member.name.charAt(0)}
+                        {activeTab === 'events' && (
+                            <motion.div
+                                key="events"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="space-y-12"
+                            >
+                                <SectionHeader
+                                    title="Championships"
+                                    subtitle="Event Deployment Manifest"
+                                    action={
+                                        <button
+                                            onClick={() => setIsEventModalOpen(true)}
+                                            className="flex items-center gap-3 px-8 py-4 bg-[#c41e3a] hover:bg-[#a01830] rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-[#c41e3a]/20"
+                                        >
+                                            <Plus size={16} /> Deploy New Event
+                                        </button>
+                                    }
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {events.map((event: any) => (
+                                        <div key={event._id} className="relative group bg-zinc-900/30 border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-[#ffd700]/30 transition-all">
+                                            <div className="h-48 overflow-hidden relative">
+                                                <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+                                                <div className="absolute bottom-6 left-8">
+                                                    <span className="px-3 py-1 bg-[#c41e3a] text-[8px] font-black uppercase tracking-[0.2em] rounded-lg mb-2 inline-block">
+                                                        {event.type}
+                                                    </span>
+                                                    <h4 className="text-2xl font-black uppercase italic tracking-tighter">{event.title}</h4>
+                                                </div>
+                                            </div>
+                                            <div className="p-8 space-y-6">
+                                                <div className="grid grid-cols-2 gap-6">
+                                                    <div>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Location</p>
+                                                        <p className="text-xs font-bold flex items-center gap-2"><MapPin size={12} className="text-[#c41e3a]" /> {event.location}</p>
                                                     </div>
                                                     <div>
-                                                        <h5 className="font-black uppercase tracking-tight">{member.name}</h5>
-                                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{member.email}</p>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-2">Scheduled</p>
+                                                        <p className="text-xs font-bold flex items-center gap-2"><Calendar size={12} className="text-[#c41e3a]" /> {new Date(event.date).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>
-                                                <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-white/5">
-                                                    <div>
-                                                        <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 mb-1">Phone</p>
-                                                        <p className="text-[10px] font-bold">{member.phone || 'N/A'}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[8px] font-black uppercase tracking-widest text-zinc-600 mb-1">Joined</p>
-                                                        <p className="text-[10px] font-bold">
-                                                            {member.joinDate ? new Date(member.joinDate).toLocaleDateString() : 'N/A'}
-                                                        </p>
-                                                    </div>
+                                                <div className="pt-6 border-t border-white/5 flex justify-between items-center">
+                                                    <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#ffd700] hover:text-white transition-colors">
+                                                        <Edit size={14} /> Modify
+                                                    </button>
+                                                    <button className="p-3 bg-red-500/5 hover:bg-red-500/20 text-red-500 rounded-xl transition-all">
+                                                        <Trash2 size={16} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ))}
-                                        {gymMembers.length === 0 && (
-                                            <div className="col-span-full py-12 text-center text-zinc-600 font-bold uppercase tracking-widest text-xs border border-white/5 border-dashed rounded-[2rem]">
-                                                No members registered in this facility yet.
-                                            </div>
-                                        )}
+                                        </div>
+                                    ))}
+                                    {events.length === 0 && (
+                                        <div className="col-span-full py-32 text-center bg-zinc-900/10 border border-white/10 border-dashed rounded-[3rem]">
+                                            <h4 className="text-zinc-700 font-black uppercase tracking-widest text-sm">No Active Deployments Found</h4>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'athletes' && (
+                            <motion.div key="athletes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                                <SectionHeader title="Athletes" subtitle="Strongest Human Rankings Control" action={<button className="flex items-center gap-3 px-8 py-4 bg-[#c41e3a] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"><Plus size={16} /> Add Champion</button>} />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="bg-zinc-900/40 p-10 rounded-[2.5rem] border border-white/5 text-center">
+                                        <Zap className="mx-auto mb-4 text-[#ffd700]" size={40} />
+                                        <h4 className="text-xl font-black uppercase mb-1 italic">Men's Division</h4>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Global Standings Management</p>
                                     </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    )
-                }
-
-                {/* Main Content Tabs */}
-                {
-                    !selectedGym && (
-                        <AnimatePresence mode="wait">
-                            {activeTab === 'gyms' ? (
-                                <motion.section
-                                    key="gyms"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="space-y-6"
-                                >
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {filteredGyms.length > 0 ? (
-                                            filteredGyms.map((gym, index) => (
-                                                <motion.div
-                                                    key={gym._id}
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                    className="group bg-zinc-900/30 border border-white/5 hover:border-white/10 rounded-[2rem] p-6 hover:bg-zinc-800/20 transition-all relative"
-                                                >
-                                                    <div className="flex flex-col lg:flex-row lg:items-center gap-8">
-                                                        <div className="flex items-center gap-5 lg:w-1/4">
-                                                            <div className="w-16 h-16 bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-[#c41e3a] group-hover:text-white transition-all overflow-hidden shrink-0">
-                                                                <Building2 size={28} />
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <h4 className="font-black text-lg uppercase truncate leading-tight">{gym.gymName}</h4>
-                                                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-1">
-                                                                    <Activity size={10} className="text-[#c41e3a]" />
-                                                                    {gym.memberCount} active trainees
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:w-2/3 gap-4">
-                                                            <div className="flex items-center gap-3 text-zinc-400">
-                                                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:text-white transition-colors">
-                                                                    <Mail size={14} />
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 leading-none mb-1">Owner: {gym.ownerName}</p>
-                                                                    <p className="text-xs font-bold truncate">{gym.email}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-3 text-zinc-400">
-                                                                <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:text-white transition-colors">
-                                                                    <MapPin size={14} />
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-600 leading-none mb-1">Location</p>
-                                                                    <p className="text-xs font-bold truncate">{gym.address}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex items-center justify-end gap-3 lg:w-1/12 ml-auto">
-                                                            <button
-                                                                onClick={() => fetchGymMembers(gym)}
-                                                                className="p-3 bg-zinc-900 rounded-xl text-zinc-500 hover:text-[#ffd700] hover:bg-zinc-800 border border-white/5 transition-all"
-                                                                title="Explore Roster"
-                                                            >
-                                                                <Users size={18} />
-                                                            </button>
-                                                            <div className="relative">
-                                                                <button
-                                                                    onClick={() => setOpenMenuId(openMenuId === gym._id ? null : gym._id)}
-                                                                    className={`p-3 rounded-xl transition-all ${openMenuId === gym._id ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'}`}
-                                                                >
-                                                                    <MoreVertical size={20} />
-                                                                </button>
-
-                                                                <AnimatePresence>
-                                                                    {openMenuId === gym._id && (
-                                                                        <>
-                                                                            <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
-                                                                            <motion.div
-                                                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                                                className="absolute right-0 mt-3 w-48 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl z-20 py-2.5 overflow-hidden"
-                                                                            >
-                                                                                <button
-                                                                                    onClick={() => handleDeleteGym(gym._id, gym.gymName)}
-                                                                                    disabled={isDeleting === gym._id}
-                                                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                                                                                >
-                                                                                    {isDeleting === gym._id ? (
-                                                                                        <Loader2 size={16} className="animate-spin" />
-                                                                                    ) : (
-                                                                                        <Trash2 size={16} />
-                                                                                    )}
-                                                                                    Terminate Partnership
-                                                                                </button>
-                                                                            </motion.div>
-                                                                        </>
-                                                                    )}
-                                                                </AnimatePresence>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            ))
-                                        ) : (
-                                            <div className="text-center py-24 bg-zinc-900/20 border border-white/5 border-dashed rounded-[3rem] px-6">
-                                                <Building2 size={40} className="mx-auto text-zinc-800 mb-6" />
-                                                <h3 className="text-xl font-black uppercase tracking-tight text-zinc-400">No Partners Identified</h3>
-                                            </div>
-                                        )}
+                                    <div className="bg-zinc-900/40 p-10 rounded-[2.5rem] border border-white/5 text-center">
+                                        <Zap className="mx-auto mb-4 text-[#c41e3a]" size={40} />
+                                        <h4 className="text-xl font-black uppercase mb-1 italic">Women's Division</h4>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Global Standings Management</p>
                                     </div>
-                                </motion.section>
-                            ) : (
-                                <motion.section
-                                    key="users"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="space-y-6"
-                                >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {filteredUsers.length > 0 ? (
-                                            filteredUsers.map((user, index) => (
-                                                <motion.div
-                                                    key={user._id}
-                                                    initial={{ opacity: 0, scale: 0.95 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    transition={{ delay: index * 0.02 }}
-                                                    className="bg-zinc-900/40 border border-white/5 rounded-3xl p-6 hover:border-[#ffd700]/30 transition-all group"
-                                                >
-                                                    <div className="flex justify-between items-start mb-6">
-                                                        <div className="w-14 h-14 bg-zinc-800 rounded-2xl flex items-center justify-center text-zinc-400 group-hover:bg-[#ffd700] group-hover:text-black transition-all">
-                                                            <UserCircle size={32} />
-                                                        </div>
-                                                        <div className="bg-zinc-800/50 px-3 py-1.5 rounded-xl border border-white/5">
-                                                            <p className="text-[8px] font-black uppercase tracking-widest text-zinc-500 leading-none mb-1">Affiliation</p>
-                                                            <p className="text-[10px] font-black text-[#c41e3a] truncate max-w-[100px]">{user.gymId?.gymName || 'Independant'}</p>
-                                                        </div>
-                                                    </div>
-                                                    <h4 className="text-lg font-black uppercase tracking-tight mb-4 group-hover:text-[#ffd700] transition-colors">{user.name}</h4>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center gap-3 text-zinc-500">
-                                                            <Mail size={14} className="text-[#c41e3a]" />
-                                                            <span className="text-xs font-bold truncate">{user.email}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3 text-zinc-500">
-                                                            <Calendar size={14} className="text-[#c41e3a]" />
-                                                            <span className="text-xs font-bold">
-                                                                Member Since {user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'System'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            ))
-                                        ) : (
-                                            <div className="col-span-full text-center py-24 bg-zinc-900/20 border border-white/5 border-dashed rounded-[3rem]">
-                                                <Users size={40} className="mx-auto text-zinc-800 mb-6" />
-                                                <h3 className="text-xl font-black uppercase tracking-tight text-zinc-400">Zero Personnel Found</h3>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'blog' && (
+                            <motion.div key="blog" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                                <SectionHeader title="Articles" subtitle="Strategic Communications Console" action={<button className="flex items-center gap-3 px-8 py-4 bg-[#c41e3a] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"><Plus size={16} /> New Article</button>} />
+                                <div className="bg-zinc-900/10 border border-white/10 border-dashed rounded-[3rem] py-20 text-center">
+                                    <p className="text-zinc-700 font-black uppercase text-xs tracking-[0.2em]">Article feed currently empty</p>
+                                </div>
+                            </motion.div>
+                        )}
+                        {activeTab === 'gallery' && (
+                            <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                                <SectionHeader title="Gallery" subtitle="Visual Asset Repository" action={<button className="flex items-center gap-3 px-8 py-4 bg-[#c41e3a] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"><Plus size={16} /> Upload Media</button>} />
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                    {[1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="aspect-square bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden relative group">
+                                            <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-all" />
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none">
+                                                <ImageIcon size={32} className="text-white/20" />
                                             </div>
-                                        )}
-                                    </div>
-                                </motion.section>
-                            )}
-                        </AnimatePresence>
-                    )
-                }
-            </main >
-        </div >
+                                            <div className="absolute bottom-4 right-4 flex gap-2">
+                                                <button className="p-2 bg-black/60 rounded-lg text-red-500 hover:bg-black transition-all">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </main>
+            </div>
+        </div>
     );
 };
 

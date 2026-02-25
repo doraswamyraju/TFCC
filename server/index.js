@@ -57,6 +57,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/gym', require('./routes/gym'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/enquiries', require('./routes/enquiries'));
+app.use('/api/admin/cms', require('./routes/cms'));
 
 // Serve Frontend (Production)
 if (process.env.NODE_ENV === 'production') {
