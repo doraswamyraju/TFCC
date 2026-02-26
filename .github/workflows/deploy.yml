@@ -40,26 +40,26 @@ jobs:
     - name: Add Known Hosts
       run: ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
 
-    - name: Run Server Diagnostics
+    - name: Prepare Server for Sync
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST_IP }}
         username: ${{ secrets.HOST_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          echo "Checking Disk Space..."
-          df -h /
-          echo "Checking Permissions..."
-          ls -la /var/www/tfcc
-          echo "Checking PM2 Status..."
-          pm2 list
-          echo "Checking Server Directory..."
-          ls -la /var/www/tfcc/server
-
+          echo "Stopping Services to Release File Locks..."
+          pm2 stop tfcc-backend || true
+          pm2 delete tfcc-backend || true
+          
     - name: Deploy with rsync
       run: |
-        rsync -avz --delete --exclude 'node_modules' -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
-        rsync -avz --exclude 'node_modules' --exclude '.env' -e "ssh -o StrictHostKeyChecking=no" ./server/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/server/
+        echo "Syncing Client Distribution..."
+        rsync -avz --exclude 'node_modules' -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
+        
+        echo "Syncing Server Assets..."
+        rsync -avz --exclude 'node_modules' --exclude '.env' --exclude 'logs' -e "ssh -o StrictHostKeyChecking=no" ./server/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/server/
+        
+        echo "Syncing Base Manifest..."
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./package.json ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/
 
     - name: Restart Server
@@ -71,4 +71,4 @@ jobs:
         script: |
           cd /var/www/tfcc/server
           npm install --production
-          pm2 reload tfcc-backend || pm2 start index.js --name tfcc-backend --time
+          pm2 start index.js --name tfcc-backend --time
