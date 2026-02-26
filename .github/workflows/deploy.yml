@@ -42,8 +42,8 @@ jobs:
 
     - name: Deploy with rsync
       run: |
-        rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
-        rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./server/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/server/
+        rsync -avz --delete --exclude 'node_modules' -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
+        rsync -avz --delete --exclude 'node_modules' -e "ssh -o StrictHostKeyChecking=no" ./server/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/server/
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./package.json ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/
 
     - name: Restart Server
