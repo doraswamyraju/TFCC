@@ -49,7 +49,12 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/tfcc')
 
 // API Routes
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', message: 'TFCC Backend is running' });
+    res.json({
+        status: 'OK',
+        message: 'TFCC Backend is running',
+        env: process.env.NODE_ENV,
+        port: PORT
+    });
 });
 
 // Auth & Gym Routes
@@ -60,14 +65,14 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/enquiries', require('./routes/enquiries'));
 app.use('/api/admin/cms', require('./routes/cms'));
 
-// Serve Frontend (Production)
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
+// Serve Frontend (Production Fallback)
+const distPath = path.join(__dirname, '../client/dist');
+app.use(express.static(distPath));
 
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-}
+// Wildcard route to serve index.html for SPA
+app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

@@ -44,6 +44,6 @@ jobs:
           echo "Cycling Process Manager..."
           pm2 delete tfcc-backend || true
           cd /var/www/tfcc/server
-          pm2 start index.js --name tfcc-backend --time
+          NODE_ENV=production pm2 start index.js --name tfcc-backend --time
           
           echo "Deployment Protocol Complete. System is Live."
