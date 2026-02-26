@@ -40,10 +40,16 @@ jobs:
           npm install --no-audit --no-fund
           npm run build --emptyOutDir
           
-          # Restart
           echo "Cycling Process Manager..."
           pm2 delete tfcc-backend || true
           cd /var/www/tfcc/server
           NODE_ENV=production pm2 start index.js --name tfcc-backend --time
+          
+          echo "Dumping Recent Logs for Diagnosis..."
+          sleep 5
+          pm2 logs tfcc-backend --lines 100 --no-colors --err
+          
+          echo "Verifying Environment..."
+          ls -la /var/www/tfcc/server/.env || echo "WARNING: .env NOT FOUND"
           
           echo "Deployment Protocol Complete. System is Live."
