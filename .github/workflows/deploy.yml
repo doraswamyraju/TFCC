@@ -40,16 +40,21 @@ jobs:
           npm install --no-audit --no-fund
           npm run build --emptyOutDir
           
+          # Restart
           echo "Cycling Process Manager..."
           pm2 delete tfcc-backend || true
+          
+          echo "Terminating any ghost processes on port 5003..."
+          npx kill-port 5003 || true
+          
           cd /var/www/tfcc/server
+          
+          echo "Injecting Environment Configuration..."
+          echo "PORT=5003" > .env
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "NODE_ENV=production" >> .env
+          
           NODE_ENV=production pm2 start index.js --name tfcc-backend --time
-          
-          echo "Dumping Recent Logs for Diagnosis..."
-          sleep 5
-          pm2 logs tfcc-backend --lines 100 --no-colors --err
-          
-          echo "Verifying Environment..."
-          ls -la /var/www/tfcc/server/.env || echo "WARNING: .env NOT FOUND"
           
           echo "Deployment Protocol Complete. System is Live."
