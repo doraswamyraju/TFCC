@@ -40,6 +40,22 @@ jobs:
     - name: Add Known Hosts
       run: ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
 
+    - name: Run Server Diagnostics
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST_IP }}
+        username: ${{ secrets.HOST_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          echo "Checking Disk Space..."
+          df -h /
+          echo "Checking Permissions..."
+          ls -la /var/www/tfcc
+          echo "Checking PM2 Status..."
+          pm2 list
+          echo "Checking Server Directory..."
+          ls -la /var/www/tfcc/server
+
     - name: Deploy with rsync
       run: |
         rsync -avz --delete --exclude 'node_modules' -e "ssh -o StrictHostKeyChecking=no" ./client/dist/ ${{ secrets.HOST_USER }}@${{ secrets.HOST_IP }}:/var/www/tfcc/client/dist/
